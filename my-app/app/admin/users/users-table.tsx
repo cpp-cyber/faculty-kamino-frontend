@@ -11,17 +11,10 @@ import { UsersTableToolbar } from "./users-table-toolbar";
 import { UsersTableCoreWrapper } from "./users-table-core";
 import { UsersTablePagination } from "./users-table-pagination";
 import { useUserFilters } from "./use-user-filters";
-import { GroupSelectionDialog } from "@/app/admin/users/group-selection-dialog";
-import { BulkDeleteConfirmDialog } from "@/app/admin/users/bulk-delete-confirm-dialog";
-import { toast } from "sonner";
 import { SortingState } from "@tanstack/react-table";
-import {
-  handleDeleteUsers,
-  handleUserGroupOperation,
-} from "@/lib/admin-operations";
 
 interface UsersTableProps {
-  onUserAction: (user: User, action: "editGroups" | "delete") => void;
+  onUserAction: (user: User, action: "editGroups") => void;
   onRefresh?: () => Promise<void> | void;
 }
 
@@ -39,22 +32,10 @@ export function UsersTable({ onUserAction, onRefresh }: UsersTableProps) {
   const [currentPage, setCurrentPage] = React.useState(1);
   const [itemsPerPage, setItemsPerPage] = React.useState(25);
 
-  // Selection state
-  const [selectedUsers, setSelectedUsers] = React.useState<Set<string>>(
-    new Set(),
-  );
-
   // Sorting state
   const [sorting, setSorting] = React.useState<SortingState>([
     { id: "name", desc: false }, // Default sort by name
   ]);
-
-  // Dialog states
-  const [addGroupDialogOpen, setAddGroupDialogOpen] = React.useState(false);
-  const [removeGroupDialogOpen, setRemoveGroupDialogOpen] =
-    React.useState(false);
-  const [deleteConfirmDialogOpen, setDeleteConfirmDialogOpen] =
-    React.useState(false);
 
   // Apply filters
   const filteredUsers = useUserFilters({
@@ -90,101 +71,6 @@ export function UsersTable({ onUserAction, onRefresh }: UsersTableProps) {
 
     return sortedData;
   }, [filteredUsers, sorting]);
-
-  // Clear selection when search changes or page changes
-  React.useEffect(() => {
-    setSelectedUsers(new Set());
-  }, [searchTerm, currentPage]);
-
-  // Get selected user objects
-  const selectedUserObjects = React.useMemo(() => {
-    return usersData.users.filter((user) => selectedUsers.has(user.name));
-  }, [usersData.users, selectedUsers]);
-
-  // Bulk operation handlers
-  const handleBulkAddToGroup = () => {
-    if (selectedUsers.size === 0) {
-      toast.error("No users selected");
-      return;
-    }
-    setAddGroupDialogOpen(true);
-  };
-
-  const handleBulkRemoveFromGroup = () => {
-    if (selectedUsers.size === 0) {
-      toast.error("No users selected");
-      return;
-    }
-    setRemoveGroupDialogOpen(true);
-  };
-
-  const handleBulkDelete = () => {
-    if (selectedUsers.size === 0) {
-      toast.error("No users selected");
-      return;
-    }
-    setDeleteConfirmDialogOpen(true);
-  };
-
-  const handleAddGroupConfirm = async (groupName: string) => {
-    try {
-      const usersToUpdate = selectedUserObjects;
-
-      if (usersToUpdate.length === 0) {
-        toast.error("No users selected");
-        return;
-      }
-
-      const usernamesToUpdate = usersToUpdate.map((user) => user.name);
-      await handleUserGroupOperation(
-        usernamesToUpdate,
-        groupName,
-        "add",
-        async () => {
-          setSelectedUsers(new Set());
-          await handleRefresh();
-        },
-      );
-    } catch (error) {
-      console.error("Failed to add users to group:", error);
-    }
-  };
-
-  const handleRemoveGroupConfirm = async (groupName: string) => {
-    try {
-      const usersToUpdate = selectedUserObjects;
-
-      if (usersToUpdate.length === 0) {
-        toast.error("No users selected");
-        return;
-      }
-
-      const usernamesToUpdate = usersToUpdate.map((user) => user.name);
-      await handleUserGroupOperation(
-        usernamesToUpdate,
-        groupName,
-        "remove",
-        async () => {
-          setSelectedUsers(new Set());
-          await handleRefresh();
-        },
-      );
-    } catch (error) {
-      console.error("Failed to remove users from group:", error);
-    }
-  };
-
-  const handleDeleteConfirm = async () => {
-    try {
-      const usernamesToDelete = selectedUserObjects.map((user) => user.name);
-      await handleDeleteUsers(usernamesToDelete, async () => {
-        setSelectedUsers(new Set());
-        await handleRefresh();
-      });
-    } catch (error) {
-      console.error("Failed to delete users:", error);
-    }
-  };
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -227,7 +113,7 @@ export function UsersTable({ onUserAction, onRefresh }: UsersTableProps) {
     setCurrentPage(1);
   }, [searchTerm, itemsPerPage]);
 
-  const handleUserAction = (user: User, action: "editGroups" | "delete") => {
+  const handleUserAction = (user: User, action: "editGroups") => {
     onUserAction(user, action);
   };
 
@@ -272,7 +158,7 @@ export function UsersTable({ onUserAction, onRefresh }: UsersTableProps) {
   return (
     <div className="space-y-4">
       {/* Header Stats */}
-      <HeaderStats usersData={usersData} onUserCreated={handleRefresh} />
+      <HeaderStats usersData={usersData} />
 
       {/* Users Table */}
       <div className="rounded-md border">
@@ -291,12 +177,6 @@ export function UsersTable({ onUserAction, onRefresh }: UsersTableProps) {
           sorting={sorting}
           onSortingChange={setSorting}
           onUserAction={handleUserAction}
-          selectedUsers={selectedUsers}
-          onSelectionChange={setSelectedUsers}
-          selectedUsersCount={selectedUserObjects.length}
-          onBulkAddToGroup={handleBulkAddToGroup}
-          onBulkRemoveFromGroup={handleBulkRemoveFromGroup}
-          onBulkDelete={handleBulkDelete}
           searchTerm={searchTerm}
         />
       </div>
@@ -309,33 +189,6 @@ export function UsersTable({ onUserAction, onRefresh }: UsersTableProps) {
         startIndex={startIndex}
         endIndex={endIndex}
         onPageChange={handlePageChange}
-      />
-
-      {/* Dialogs */}
-      <GroupSelectionDialog
-        open={addGroupDialogOpen}
-        onOpenChange={setAddGroupDialogOpen}
-        title="Add Users to Group"
-        description="Select a group to add the selected users to:"
-        onConfirm={handleAddGroupConfirm}
-        selectedUsersCount={selectedUserObjects.length}
-      />
-
-      <GroupSelectionDialog
-        open={removeGroupDialogOpen}
-        onOpenChange={setRemoveGroupDialogOpen}
-        title="Remove Users from Group"
-        description="Select a group to remove the selected users from:"
-        onConfirm={handleRemoveGroupConfirm}
-        selectedUsersCount={selectedUserObjects.length}
-      />
-
-      <BulkDeleteConfirmDialog
-        open={deleteConfirmDialogOpen}
-        onOpenChange={setDeleteConfirmDialogOpen}
-        onConfirm={handleDeleteConfirm}
-        selectedUsersCount={selectedUserObjects.length}
-        usernames={selectedUserObjects.map((user) => user.name)}
       />
     </div>
   );

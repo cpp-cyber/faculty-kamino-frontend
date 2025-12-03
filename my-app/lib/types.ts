@@ -142,11 +142,6 @@ export interface ClonePodRequest {
   groups: string[];
 }
 
-export interface CreateUsersRequest {
-  username: string;
-  password: string;
-}
-
 export interface UserDashboardResponse {
   pods: DeployedPod[];
   templates: PodTemplate[];

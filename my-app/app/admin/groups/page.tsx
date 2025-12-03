@@ -28,8 +28,6 @@ export default function AdminGroupsPage() {
 
   const handleRefresh = async () => {
     setRefreshKey((prev) => prev + 1);
-    // Simulate async operation
-    await new Promise((resolve) => setTimeout(resolve, 500));
   };
 
   const handleGroupAction = (groupName: string, action: "delete" | "edit") => {

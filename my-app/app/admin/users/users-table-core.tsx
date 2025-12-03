@@ -9,13 +9,7 @@ interface UsersTableCoreWrapperProps {
   itemsPerPage: number;
   sorting: SortingState;
   onSortingChange: (sorting: SortingState) => void;
-  onUserAction: (user: User, action: "editGroups" | "delete") => void;
-  selectedUsers: Set<string>;
-  onSelectionChange: (selectedUsers: Set<string>) => void;
-  selectedUsersCount: number;
-  onBulkAddToGroup: () => void;
-  onBulkRemoveFromGroup: () => void;
-  onBulkDelete: () => void;
+  onUserAction: (user: User, action: "editGroups") => void;
   searchTerm?: string;
 }
 
@@ -24,12 +18,6 @@ export function UsersTableCoreWrapper({
   sorting,
   onSortingChange,
   onUserAction,
-  selectedUsers,
-  onSelectionChange,
-  selectedUsersCount,
-  onBulkAddToGroup,
-  onBulkRemoveFromGroup,
-  onBulkDelete,
   searchTerm = "",
 }: UsersTableCoreWrapperProps) {
   return (
@@ -37,12 +25,6 @@ export function UsersTableCoreWrapper({
       users={users}
       searchTerm={searchTerm}
       onUserAction={onUserAction}
-      selectedUsers={selectedUsers}
-      onSelectionChange={onSelectionChange}
-      selectedUsersCount={selectedUsersCount}
-      onBulkAddToGroup={onBulkAddToGroup}
-      onBulkRemoveFromGroup={onBulkRemoveFromGroup}
-      onBulkDelete={onBulkDelete}
       sorting={sorting}
       onSortingChange={onSortingChange}
     />

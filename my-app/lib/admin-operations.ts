@@ -2,7 +2,6 @@ import { toast } from "sonner";
 import {
   deployPod,
   clonePodTemplates,
-  createUsers,
   deleteUsers,
   bulkAddUsersToGroup,
   bulkRemoveUsersFromGroup,
@@ -10,7 +9,6 @@ import {
   deleteGroups,
   renameGroup,
 } from "./api";
-import { CreateUsersRequest } from "./types";
 
 /**
  * Centralized admin operations with immediate toast feedback
@@ -112,57 +110,6 @@ export async function handleAdminPodDeployment(
 // ============================================================================
 // USER MANAGEMENT OPERATIONS
 // ============================================================================
-
-/**
- * Handles user creation with immediate feedback
- */
-export async function handleCreateUsers(
-  users: CreateUsersRequest[],
-  onSuccess?: () => void,
-  onError?: (error: Error) => void,
-): Promise<void> {
-  const userCount = users.length;
-  const isSingle = userCount === 1;
-
-  // Show immediate feedback
-  toast.info(
-    `Creating ${isSingle ? `user "${users[0].username}"` : `${userCount} users`}...`,
-    {
-      duration: 10000,
-    },
-  );
-
-  try {
-    await createUsers(users);
-    console.log(`Successfully created ${userCount} user(s)`);
-
-    toast.success(
-      isSingle
-        ? `User "${users[0].username}" created successfully`
-        : `${userCount} users created successfully`,
-    );
-
-    if (onSuccess) {
-      onSuccess();
-    }
-  } catch (error) {
-    console.error("Failed to create users:", error);
-    const createError =
-      error instanceof Error ? error : new Error("Unknown creation error");
-
-    toast.error(
-      isSingle
-        ? `Failed to create user "${users[0].username}": ${createError.message}`
-        : `Failed to create ${userCount} users: ${createError.message}`,
-    );
-
-    if (onError) {
-      onError(createError);
-    } else {
-      throw createError;
-    }
-  }
-}
 
 /**
  * Handles user deletion with immediate feedback

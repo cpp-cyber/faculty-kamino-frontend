@@ -1,82 +1,29 @@
 "use client";
 
 import { useState } from "react";
-import { toast } from "sonner";
 import { AuthGuard } from "@/components/auth-guard";
 import { PageLayout } from "@/app/admin/admin-page-layout";
 import { UsersTable } from "@/app/admin/users/users-table";
 import { EditGroupsDialog } from "@/app/admin/users/edit-groups-dialog";
-import { deleteUser } from "@/lib/api";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { User } from "@/lib/types";
 
 const breadcrumbs = [{ label: "Users", href: "/admin/users" }];
 
 export default function AdminUsersPage() {
-  const [alertOpen, setAlertOpen] = useState(false);
   const [editGroupsOpen, setEditGroupsOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [selectedAction, setSelectedAction] = useState<
-    "editGroups" | "delete" | null
-  >(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const handleRefresh = async () => {
     setRefreshKey((prev) => prev + 1);
-    // Simulate async operation
-    await new Promise((resolve) => setTimeout(resolve, 500));
   };
 
-  const handleUserAction = (user: User, action: "editGroups" | "delete") => {
+  const handleUserAction = (user: User, action: "editGroups") => {
     setSelectedUser(user);
-    setSelectedAction(action);
 
     if (action === "editGroups") {
       setEditGroupsOpen(true);
       return;
-    }
-
-    setAlertOpen(true);
-  };
-
-  const getActionText = () => {
-    if (!selectedAction) return "";
-    return selectedAction === "delete" ? "delete" : selectedAction;
-  };
-
-  const getActionButtonText = () => {
-    if (!selectedAction) return "";
-    return selectedAction === "delete" ? "Delete" : selectedAction;
-  };
-
-  const handleConfirmAction = async () => {
-    if (!selectedUser || !selectedAction) return;
-
-    try {
-      if (selectedAction === "delete") {
-        await deleteUser(selectedUser.name);
-        toast.success(
-          `User "${selectedUser.name}" has been deleted successfully.`,
-        );
-      }
-
-      setAlertOpen(false);
-      setSelectedUser(null);
-      setSelectedAction(null);
-      // Trigger a refresh of the users table
-      handleRefresh();
-    } catch (error) {
-      toast.error(
-        `Failed to ${getActionText()} user: ${error instanceof Error ? error.message : "Unknown error"}`,
-      );
     }
   };
 
@@ -99,31 +46,6 @@ export default function AdminUsersPage() {
           </div>
         </div>
       </PageLayout>
-
-      {/* Action Confirmation Dialog */}
-      <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              Are you sure you want to {getActionText()} &quot;
-              {selectedUser?.name}&quot;?
-            </AlertDialogTitle>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmAction}
-              className={
-                selectedAction === "delete"
-                  ? "bg-destructive hover:bg-destructive/90"
-                  : ""
-              }
-            >
-              {getActionButtonText()}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       {/* Edit Groups Dialog */}
       <EditGroupsDialog

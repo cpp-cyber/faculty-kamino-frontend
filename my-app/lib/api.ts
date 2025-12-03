@@ -12,7 +12,6 @@ import {
   UnpublishedPodTemplate,
   GetUsersResponse,
   DashboardResponse,
-  CreateUsersRequest,
   UserDashboardResponse,
 } from "./types";
 
@@ -290,24 +289,6 @@ export async function getAllUsers(): Promise<GetUsersResponse> {
 
   console.log("Fetched users:", data.users);
   return data;
-}
-
-// Create new users (accepts array for bulk creation)
-export async function createUsers(users: CreateUsersRequest[]): Promise<void> {
-  const response = await fetch(`/api/v1/admin/users/create`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
-    body: JSON.stringify({ users: users }),
-  });
-
-  if (!response.ok) {
-    throw new Error(
-      `Failed to create users: ${response.status} ${response.statusText}`,
-    );
-  }
 }
 
 // Delete users (accepts array for bulk deletion)
